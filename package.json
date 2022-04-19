@@ -1,0 +1,22 @@
+{
+  "name": "jms-regexp",
+  "version": "1.0.0",
+  "description": "JMS Regexp module",
+  "main": "regexp.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "jms",
+    "regexp"
+  ],
+  "devDependencies": {
+    "jms-engine": "github:0LEG0/jms-engine"
+  },
+  "dependencies": {
+    "fecha": "^4.2.1",
+    "uuid": "^8.3.2"
+  },
+  "author": "0LEG0 <a.i.s@gmx.com>",
+  "license": "Apache-2.0"
+}
