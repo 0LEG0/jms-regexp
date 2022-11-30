@@ -21,8 +21,8 @@ const { v4: uuid } = require("uuid");
 const { format } = require("fecha");
 const fs = require("fs");
 const querystring = require("querystring");
-const JENGINE = connect({selfdispatch: false});
-let CONFIGFILE = process.env.PWD + "/conf/.jms-regexp.conf";
+const JENGINE = connect({trackname: "regexp", selfdispatch: false});
+const CONFIGFILE = process.env.PWD + "/conf/.jms-regexp.conf";
 let config = { install: [] };
 const contexts = new Map(); // message.name, context.function
 
