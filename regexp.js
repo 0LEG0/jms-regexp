@@ -1,6 +1,6 @@
 /**
  * Regexp message handler
- * @version 1.0.0
+ * @version 1.0.1
  * @author 0LEG0 <a.i.s@gmx.com>
  * 
  * Regexp command line:
@@ -22,7 +22,7 @@ const { format } = require("fecha");
 const fs = require("fs");
 const querystring = require("querystring");
 const JENGINE = connect({trackname: "regexp", selfdispatch: false});
-const CONFIGFILE = "./conf/.jms-regexp.conf";
+const CONFIGFILE = process.env.PWD + "/conf/.regexp.conf";
 let config = { install: [] };
 const contexts = new Map(); // message.name, context.function
 

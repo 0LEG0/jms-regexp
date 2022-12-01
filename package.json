@@ -1,6 +1,6 @@
 {
   "name": "jms-regexp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "JMS Regexp module",
   "main": "regexp.js",
   "scripts": {
