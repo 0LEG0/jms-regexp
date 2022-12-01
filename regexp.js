@@ -22,7 +22,7 @@ const { format } = require("fecha");
 const fs = require("fs");
 const querystring = require("querystring");
 const JENGINE = connect({trackname: "regexp", selfdispatch: false});
-const CONFIGFILE = process.env.PWD + "/conf/.regexp.conf";
+const CONFIGFILE = process.env.JMS_PATH + "/conf/.regexp.conf";
 let config = { install: [] };
 const contexts = new Map(); // message.name, context.function
 
