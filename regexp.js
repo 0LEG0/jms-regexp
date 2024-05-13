@@ -1,6 +1,6 @@
 /**
  * Regexp message handler
- * @version 1.0.1
+ * @version 1.0.2
  * @author 0LEG0 <a.i.s@gmx.com>
  * 
  * Regexp command line:
@@ -22,7 +22,7 @@ const { format } = require("fecha");
 const fs = require("fs");
 const querystring = require("querystring");
 const JENGINE = connect({trackname: "regexp", selfdispatch: false});
-const CONFIGFILE = process.env.JMS_PATH + "/conf/.regexp.conf";
+const CONFIGFILE = process.env.JMS_PATH + "/conf/regexp.conf";
 let config = { install: [] };
 const contexts = new Map(); // message.name, context.function
 
@@ -289,7 +289,7 @@ function unload() {
 		for (let i = 0; i < config.install.length; i++) {
 			let {message, priority, context} = REGEXP_INSTALL.exec(config.install[i])?.groups ?? {};
 			if (message && contexts.has(context ?? message)) {
-				JENGINE.info("Regexp:", message, "message has been uninstalled from context", context ?? message);
+				JENGINE.note("Regexp:", message, "message has been uninstalled from context", context ?? message);
 				JENGINE.uninstall(message);
 			}
 		}
@@ -298,7 +298,7 @@ function unload() {
 	});
 }
 
-function load(file = ".jms-regexp.conf") {
+function load(file = "regexp.conf") {
 	return unload().then(() => {
 	// read file to config obj
 	let raw = fs.readFileSync(file, "utf-8");
@@ -327,7 +327,7 @@ function load(file = ".jms-regexp.conf") {
 	if (config.install) config.install.forEach(line => {
 		let {message, priority = 100, context} = REGEXP_INSTALL.exec(line)?.groups ?? {};
 		if (message && contexts.has(context ?? message)) {
-			JENGINE.info("Regexp", message, "message has been installed to context", context ?? message);
+			JENGINE.note("Regexp", message, "message has been installed to context", context ?? message);
 			JENGINE.install(message, contexts.get(context ?? message), priority);
 		}
 	});
@@ -350,9 +350,8 @@ async function onCommand(message) {
 }
 
 async function onHalt() {
-	return unload().then(() => {
-		process.exit(0);
-	})
+	await unload();
+	process.exit(0);
 }
 
 // async function test() {
