@@ -1,6 +1,6 @@
 /**
  * Regexp message handler
- * @version 1.0.2
+ * @version 1.0.3
  * @author 0LEG0 <a.i.s@gmx.com>
  * 
  * Regexp command line:
@@ -23,8 +23,8 @@ const fs = require("fs");
 const querystring = require("querystring");
 const JENGINE = connect({trackname: "regexp", selfdispatch: false});
 const CONFIGFILE = process.env.JMS_PATH + "/conf/regexp.conf";
-let config = { install: [] };
-const contexts = new Map(); // message.name, context.function
+let CONFIG = { install: [] };
+const CONTEXTS = new Map(); // message.name, context.function
 
 // -- regexp.conf --
 // [section]
@@ -141,12 +141,12 @@ function executeCommand(message, line = "") {
 	let c = parseCommand(line);
 	// console.log(c);
 	if (c.command == "call") {
-		let ctx = contexts.get(c.args);
+		let ctx = CONTEXTS.get(c.args);
 		if (typeof ctx == "function") return ctx(message);
 		return message;
 	}
 	if (c.command == "jump") {
-		let ctx = contexts.get(c.args);
+		let ctx = CONTEXTS.get(c.args);
 		if (typeof ctx == "function") {
 			let res = ctx(message);
 			res.return = true;
@@ -284,16 +284,16 @@ function createContext(arr) {
 }
 
 function unload() {
-	if (!config.install) return Promise.resolve();
+	if (!CONFIG.install) return Promise.resolve();
 	return new Promise((resolve, reject) => {
-		for (let i = 0; i < config.install.length; i++) {
-			let {message, priority, context} = REGEXP_INSTALL.exec(config.install[i])?.groups ?? {};
-			if (message && contexts.has(context ?? message)) {
+		for (let i = 0; i < CONFIG.install.length; i++) {
+			let {message, priority, context} = REGEXP_INSTALL.exec(CONFIG.install[i])?.groups ?? {};
+			if (message && CONTEXTS.has(context ?? message)) {
 				JENGINE.note("Regexp:", message, "message has been uninstalled from context", context ?? message);
 				JENGINE.uninstall(message);
 			}
 		}
-		contexts.clear();
+		CONTEXTS.clear();
 		resolve();
 	});
 }
@@ -302,37 +302,37 @@ function load(file = "regexp.conf") {
 	return unload().then(() => {
 	// read file to config obj
 	let raw = fs.readFileSync(file, "utf-8");
-	config = { install: [] };
+	CONFIG = { install: [] };
 	let section;
 	raw.split("\n").forEach((line) => {
 		if (REGEXP_CONTEXT.test(line)) {
 			// create section
 			section = REGEXP_CONTEXT.exec(line).groups.name;
-			config[section] = [];
+			CONFIG[section] = [];
 		} else if (!REGEXP_SKIP.test(line)) {
 			// create expression
-			config[section].push(line);
+			CONFIG[section].push(line);
 			// console.log(line, regexInstall.exec(line)?.groups);
 		}
 	});
 
 	// create contexts
-	for (let ctx in config) {
+	for (let ctx in CONFIG) {
 		if (ctx !== "install") {
 			// console.log("Create context:", ctx);
-			contexts.set(ctx, createContext(config[ctx]));
+			CONTEXTS.set(ctx, createContext(CONFIG[ctx]));
 		}
 	}
 	// subscribe to contexts
-	if (config.install) config.install.forEach(line => {
-		let {message, priority = 100, context} = REGEXP_INSTALL.exec(line)?.groups ?? {};
-		if (message && contexts.has(context ?? message)) {
+	if (CONFIG.install) CONFIG.install.forEach(line => {
+		let {message, priority = "100", context} = REGEXP_INSTALL.exec(line)?.groups ?? {};
+		if (message && CONTEXTS.has(context ?? message)) {
 			JENGINE.note("Regexp", message, "message has been installed to context", context ?? message);
-			JENGINE.install(message, contexts.get(context ?? message), priority);
+			JENGINE.install(message, CONTEXTS.get(context ?? message), parseInt(priority));
 		}
 	});
 
-	return config;
+	return CONFIG;
 	});
 }
 
@@ -354,27 +354,11 @@ async function onHalt() {
 	process.exit(0);
 }
 
-// async function test() {
-	// console.log("Test replaceRegexp:", replaceRegexp("(\\w+)\\s+(\\w+)", "Hello World!", "echo \\1;marked=\\2;handled=ext\\.\\d+"));
-	// console.log("Test replaceParam:", replaceParam(new JMessage("test", {param1: "Value1"}), "Here is param1 = ${param1}"));
-	// console.log("Test parseCommand:", parseCommand(" =return;first=Hello;second=World;handled=true"));
-	// console.log("Test parseParams:", parseParams("marked=No;handled=true"));
-	// console.log("Test replaceFunction:", replaceParam(new JMessage("test", {param1: "VALUEZ"}), "${param1}, $(random , this # is number and this @ is letter)"));
-	// console.log("Test replaceFunction:", replaceParam(new JMessage("test", {param1: "VALUEZ"}), "${param1}, $(uuid)"));	
-	// console.log(executeCommand(message, "if ${text}(\\w+)\\s+(\\w+)=echo \\0=return;first=\\1;second=\\2;handled=true"));
-	// let config = loadConfig("./conf/jms-regexp.conf");
-	// console.log(config);
-	// let context = "${text}(\\w+)\\s+(\\w+)=echo \\1;marked=\\2;handled=true";
-	// console.log("Test 1:", contexts.get("test")(message));
-	// console.log("Test 2:", contexts.get("echo2")(message2));
-// }
-// test().catch(console.error);
-
 async function main() {
 	load(CONFIGFILE);
 	JENGINE.install("jengine.command", onCommand);
 	JENGINE.install("jengine.halt", onHalt);
-	JENGINE.info("Regexp module started.");
+	JENGINE.note("Regexp module started.");
 }
 
 main().catch(JENGINE.error);
